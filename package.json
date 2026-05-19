@@ -1,0 +1,30 @@
+{
+  "name": "halftime-hackathon",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/ssh-erry/Halftime-Hackathon#readme",
+  "bugs": {
+    "url": "https://github.com/ssh-erry/Halftime-Hackathon/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ssh-erry/Halftime-Hackathon.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "node_modules/.bin/tsc",
+    "tsx": "node_modules/.bin/tsx"
+  },
+  "dependencies": {
+    "@types/node": "^25.9.0",
+    "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.2",
+    "typescript": "^6.0.3"
+  }
+}
