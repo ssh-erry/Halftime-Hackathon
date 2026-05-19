@@ -94,8 +94,49 @@ function messageSend(session: string, receiverId: number, message: string): { me
   };
 }
 
-function messageList(session: string, otherUserId: number): { messages: Message[] } {
+/**
+ * Returns list of messages between two users
+ *
+ * @param {string} session
+ * @param {number} otherUserId
+ * @returns {messages: Message[]} 
+ */
+function messageList(session: string, otherUserId: number): { messages: Message[] } | ErrorObject {
+  loadData();
+  const data = getData();
 
+  const validSession = checkSession(data, session);
+
+  if (validSession == undefined) {
+    return {
+      error: 'INVALID_SESSION', 
+      message: 'Session is invalid.'
+    }
+  }
+
+  const currentUserId = validSession.userId;
+  const otherUser = data.users.find(user => user.userId === otherUserId);
+
+  if (otherUser === undefined) {
+    return {
+      error: 'INVALID_USER', 
+      message: 'User does not exist.'
+    }
+  }
+
+  const messages = data.messages.filter(message => {
+    const currentUserSentMsg = message.senderId === currentUserId && message.receiverId === otherUserId;
+
+    const otherUserSentMsg = message.senderId === otherUserId && message.receiverId === currentUserId;
+
+    return currentUserSentMsg || otherUserSentMsg;
+  });
+
+  messages.sort((a, b) => a.timeSent - b.timeSent);
+
+  return {
+    messages: messages
+  };
 }
 
 export { 
