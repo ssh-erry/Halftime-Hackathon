@@ -1,7 +1,6 @@
 import { Tabs } from 'expo-router';
 import { View, Image } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
@@ -37,22 +36,28 @@ export default function TabLayout() {
         }}
       />
 			<Tabs.Screen
-				name="matching"
-				options={{
-					title: '',
-					tabBarIcon: ({ focused }) => (
-						<View
-							style={{
-								width: 64,
-								height: 64,
-								borderRadius: 32,
-								backgroundColor: focused ? '#fff' : '#222',
-								justifyContent: 'center',
-								alignItems: 'center',
-								marginTop: -30,
-							}}
-						>
-							<Image
+        name="matching"
+        options={{
+          title: '',
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+
+                backgroundColor: '#fff',
+
+                borderWidth: focused ? 5 : 2,
+                borderColor: '#ff8c00',
+
+                justifyContent: 'center',
+                alignItems: 'center',
+
+                marginTop: -30,
+              }}
+            >
+              <Image
                 source={require('../../assets/images/swolemate-icon.png')}
                 style={{
                   width: 40,
@@ -60,10 +65,10 @@ export default function TabLayout() {
                   resizeMode: 'contain',
                 }}
               />
-						</View>
-					),
-				}}
-			/>
+            </View>
+          ),
+        }}
+      />
     	<Tabs.Screen
         name="chat"
         options={{
