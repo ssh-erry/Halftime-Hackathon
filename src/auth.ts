@@ -36,6 +36,17 @@ export function checkEmail(data: DataStore, email: string): User | undefined {
 }
 
 /**
+ * Checks if a session is valid
+ *
+ * @param {DataStore} data
+ * @param {string} session
+ * @returns {Users | undefined}
+ */
+export function checkSession(data: DataStore, session: string): Session | undefined {
+  return data.sessions.find(user => user.sessionId.includes(session));
+}
+
+/**
  * Checks if a password reaches the minimum valid length
  *
  * @param {string} passwordLen
@@ -166,6 +177,13 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     usedPasswords: [password],
     numSuccessfulLogins: 1,
     numFailedPasswordsSinceLastLogin: 0,
+    age: -1,
+    bio: '',
+    gym: '',
+    location: '',
+    goals: '',
+    gender: '',
+    gym_experience: -1 
   };
 
   // Creates new session
@@ -238,7 +256,89 @@ function adminAuthLogin(email: string, password: string): { session: string } | 
   }
 }
 
-export { adminAuthRegister, adminAuthLogin }
+/**
+ * Given an admin user's session and userId, update the properties
+ * of this logged in admin user.
+ *
+ * @param {string} session
+ * @param {string} email
+ * @returns {empty}
+ */
+function adminUserDetailsUpdate(sessionId: string, userId: number): EmptyObject | ErrorObject {
+  // CHECK IF FIELDS EXIST FIRST, IF THEY DON'T HAVE ITS OWN ERROR
+  // The fields which need to exist are everything but the pfp, where if pfp doesn't exist
+  // we assign a random one 
+  loadData();
+  const data = getData();
+  const session: Session | undefined = checkSession(data, sessionId)
+  
+  if (!session) {
+    return {
+      error: 'UNAUTHORISED',
+      message: 'Session is empty or invalid'
+    }
+  }
+
+  const user = data.users.find(user => user.userId === session.userId)
+
+  // If userId is not the same as the one given by sessionId, return error
+  if (!user) {
+    return {
+      error: 'UNAUTHORISED',
+      message: 'Incorrect user of session'
+    }
+  }
+
+  // If there is no age found, return error 
+  if (user.age === INDEX_NOT_FOUND) {
+    return {
+      error: 'AGE_NOT_FOUND',
+      message: 'Age not present, please input age!'
+    }
+  }
+
+  // If there is no bio found, return error
+  if (user.bio === '') {
+    return {
+      error: 'BIO_NOT_FOUND',
+      message: 'Bio not present, please input bio!'
+    }
+  }
+
+  // If there is no gym found, return error
+  if (user.gym === '') {
+    return {
+      error: 'GYM_NOT_FOUND',
+      message: 'Gym branch not present, please input gym branch!'
+    }
+  }
+
+  // If there is no location, return error
+  if (user.location === '') {
+    return {
+      error: 'LOCATION_NOT_FOUND',
+      message: 'Location not present, please input location!'
+    }
+  }
+
+  // If there are no goals, return error
+  if (user.goals === '') {
+    return {
+      error: 'GOALS_NOT_FOUND',
+      message: 'Goals not present, please input some goals!'
+    }
+  }
+
+  if (user.gender === '') {
+    return {
+      error: 'GENDER_NOT_FOUND',
+      gender: 'Gender not present, '
+    }
+  }
+}
+
+
+export { adminAuthRegister, adminAuthLogin, adminUserDetailsUpdate }
 
 
 
