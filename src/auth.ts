@@ -48,7 +48,7 @@ export function checkEmail(data: DataStore, email: string): User | undefined {
  * @returns {Users | undefined}
  */
 export function checkSession(data: DataStore, session: string): Session | undefined {
-  return data.sessions.find(user => user.sessionId.includes(session));
+  return data.sessions.find(user => user.sessionId == session);
 }
 
 /**

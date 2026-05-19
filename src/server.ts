@@ -141,3 +141,6 @@ process.on('SIGINT', () => {
 });
 
 export default app;
+// Server stuff 
+
+import { messageSend, messageList } from './message';
