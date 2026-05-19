@@ -4,7 +4,7 @@
     "slug": "swolemate",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/swolemate-icon.png",
     "scheme": "swolemate",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
