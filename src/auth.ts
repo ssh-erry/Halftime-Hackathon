@@ -23,6 +23,67 @@ const DIGITS = /[0-9]/;
 const INDEX_NOT_FOUND = -1;
 const REMOVE_ONE_ITEM = 1;
 
+// Helper Functions
+/**
+ * Checks to see if the user with the given email exists
+ *
+ * @param {object} data
+ * @param {string} email
+ * @returns {Users | undefined}
+ */
+export function checkEmail(data: DataStore, email: string): User | undefined {
+  return data.users.find(user => user.email === email);
+}
+
+/**
+ * Checks if a password reaches the minimum valid length
+ *
+ * @param {string} passwordLen
+ * @returns {boolean}
+ */
+export function checkPasswordLen(passwordLen: number): boolean {
+  if (passwordLen < MIN_PASSWORD_LEN) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Create hash of a password
+ *
+ * @param {string} password
+ * @returns {string}
+ */
+export function getHashOf(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+/**
+ * Checks if a given name length is valid or invalid
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function checkNameLength(nameLen: number): boolean {
+  if (nameLen < MIN_NAME_LEN || nameLen > MAX_NAME_LEN) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Checks if the characters in a password are valid or not
+ *
+ * @param {string} password
+ * @returns {boolean}
+ */
+export function checkPasswordCharacters(password: string): boolean {
+  if (!UPPER_LOWER_ALPHABET.test(password) || !DIGITS.test(password)) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Register a user with an email, password, and names, then return their session
  * value.
@@ -93,7 +154,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
 
   // Create new user
   const sessionId = crypto.randomUUID();
-  password = crypto.createHash('sha256').update(password).digest('hex');
+  password = getHashOf(password)
   const userId = data.users.length;
 
   const newUser: User = {
@@ -108,7 +169,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   };
 
   // Creates new session
-  const session = {
+  const session: Session = {
     sessionId: sessionId,
     userId: userId
   };
@@ -124,59 +185,60 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
   };
 }
 
-export { adminAuthRegister }
-
-// Helper Functions
-
 /**
- * Checks to see if the user with the given email exists
+ * Given a registered user's email and password, return their session value.
  *
- * @param {object} data
  * @param {string} email
- * @returns {Users | undefined}
- */
-export function checkEmail(data: DataStore, email: string): User | undefined {
-  return data.users.find(user => user.email === email);
-}
-
-/**
- * Checks if a password reaches the minimum valid length
- *
- * @param {string} passwordLen
- * @returns {boolean}
- */
-export function checkPasswordLen(passwordLen: number): boolean {
-  if (passwordLen < MIN_PASSWORD_LEN) {
-    return false;
-  }
-  return true;
-}
-
-/**
- * Checks if a given name length is valid or invalid
- *
- * @param {string} name
- * @returns {boolean}
- */
-export function checkNameLength(nameLen: number): boolean {
-  if (nameLen < MIN_NAME_LEN || nameLen > MAX_NAME_LEN) {
-    return false;
-  }
-  return true;
-}
-
-/**
- * Checks if the characters in a password are valid or not
- *
  * @param {string} password
- * @returns {boolean}
+ * @returns {session: string}
  */
-export function checkPasswordCharacters(password: string): boolean {
-  if (!UPPER_LOWER_ALPHABET.test(password) || !DIGITS.test(password)) {
-    return false;
+function adminAuthLogin(email: string, password: string): { session: string } | ErrorObject {
+  // indirectly access data
+  loadData()
+  const data: DataStore = getData();
+
+  // check to see if the user with the corresponding email exists
+  const emailCheck: User | undefined = checkEmail(data, email);
+
+  // checks if password is correct and returns session or
+  // error message accordingly
+  if (emailCheck) {
+    if (emailCheck.password === getHashOf(password)) {
+      const userId = 
+      emailCheck.numFailedPasswordsSinceLastLogin = 0;
+      emailCheck.numSuccessfulLogins++;
+
+      const sessionId = crypto.randomUUID();
+      const session: Session = {
+        sessionId: sessionId,
+        userId: emailCheck.userId
+      }
+      
+      data.sessions.push(session);
+      saveData();
+
+      return {
+        session: sessionId
+      };
+      // If password is incorrect return error
+    } else {
+      emailCheck.numFailedPasswordsSinceLastLogin++;
+      saveData();
+      return {
+        error: 'INVALID_CREDENTIALS',
+        message: 'Password is not correct for the given email.'
+      }
+    }
   }
-  return true;
+
+  // If email address does not exist, return error 
+  return {
+    error: 'INVALID_CREDENTIALS',
+    message:  'Given email address does not exist.'
+  }
 }
+
+export { adminAuthRegister, adminAuthLogin }
 
 
 
