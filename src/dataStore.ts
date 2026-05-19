@@ -30,6 +30,14 @@ export interface Session {
   userId: number;
 }
 
+export interface Message {
+  messageId: number;
+  senderId: number;
+  receiverId: number;
+  message: string;
+  timeSent: number;
+}
+
 export interface ErrorObject {
   error: string;
   message: string;
@@ -40,11 +48,13 @@ export type EmptyObject = Record<never, never>;
 export interface DataStore {
   users: User[];
   sessions: Session[];
+  messages: Message[];
 }
 
 const data: DataStore = {
   users: [],
-  sessions: []
+  sessions: [],
+  messages: [],
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,10 +90,16 @@ function saveData() {
  * @returns {null}
  */
 function loadData() {
+  if (!fs.existsSync('data.json')) {
+    saveData();
+    return;
+  }
+
   const loadedData = JSON.parse(fs.readFileSync('data.json', 'utf-8'));
 
   data.users = loadedData.users;
   data.sessions = loadedData.sessions;
+  data.messages = loadedData.messages;
 }
 
 export {
