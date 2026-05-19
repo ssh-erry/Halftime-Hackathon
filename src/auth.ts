@@ -184,7 +184,7 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
     usedPasswords: [password],
     numSuccessfulLogins: 1,
     numFailedPasswordsSinceLastLogin: 0,
-    age: -1,
+    dob: -1,
     bio: '',
     gym: '',
     location: '',
@@ -284,7 +284,7 @@ function adminUserDetails(userId: number) {
           email: user.email,
           numSuccessfulLogins: user.numSuccessfulLogins,
           numFailedPasswordsSinceLastLogin: user.numFailedPasswordsSinceLastLogin,
-          age: user.age,
+          dob: user.dob,
           profilePic: user.profilePic,
           bio: user.bio,
           gym: user.gym,
@@ -305,7 +305,7 @@ function adminUserDetails(userId: number) {
  * @param {string} email
  * @param {string} nameFirst
  * @param {string} nameLast
- * @param {int} age
+ * @param {int} dob
  * @param {File} profilePic
  * @param {string} bio
  * @param {string} gym
@@ -315,7 +315,7 @@ function adminUserDetails(userId: number) {
  * @param {int} gym_experience
  * @returns {empty}
  */
-function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string, nameLast: string, age: number, profilePic: File,
+function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string, nameLast: string, dob: number, profilePic: File,
   bio: string, gym: string, location: string, goals: string, gender: string, gym_experience: number): EmptyObject | ErrorObject {
   // All fields except profilePic, bio, location, goals must have a value
   loadData();
@@ -323,11 +323,11 @@ function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string
   const user = data.users.find(user => user.userId === userId)
 
   // Checking whether fields are empty
-  // If there is no age found, return error 
-  if (user.age === INDEX_NOT_FOUND) {
+  // If there is no dob found, return error 
+  if (user.dob === INDEX_NOT_FOUND) {
     return {
-      error: 'AGE_NOT_FOUND',
-      message: 'Age not present, please input age!'
+      error: 'DOB_NOT_FOUND',
+      message: 'Date of birth not present, please input date of birth!'
     }
   }
 
@@ -342,7 +342,7 @@ function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string
   if (user.gender === '') {
     return {
       error: 'GENDER_NOT_FOUND',
-      message: 'Gender not present, '
+      message: 'Gender not present'
     }
   }
 
@@ -400,14 +400,14 @@ function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string
     }
   };
 
-  // NEED MORE ERROR CHECKS FOR AGE...GYM_EXPERIENCE
+  // NEED MORE ERROR CHECKS FOR DOB...GYM_EXPERIENCE
 
   for (const user of data.users) {
     if (userId === user.userId) {
       user.email = email;
       user.nameFirst = nameFirst;
       user.nameLast = nameLast;
-      user.age = age;
+      user.dob = dob;
       user.profilePic = profilePic;
       user.bio = bio;
       user.gym = gym;
@@ -424,12 +424,96 @@ function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string
   return { };
 }
 
+/**
+  * Given details relating to a password change, update the password of a logged in user.
+  *
+  * @param {int} userId
+  * @param {string} oldPassword
+  * @param {string} newPassword
+  *
+  * @returns { } - logged in user's password is successfully updated
+*/
+function adminUserPasswordUpdate(userId: number, oldPassword: string, newPassword: string) {
+  // Loading data
+  loadData();
+  const data = getData();
+
+  // Find the user object
+  const user = data.users.find(u => u.userId === userId) as User;
+
+  // Verify old password
+  const hashedOldPassword = getHashOf(oldPassword);
+  if (user.password !== hashedOldPassword) {
+    return {
+      error: 'INVALID_OLD_PASSWORD',
+      message: 'Invalid old password: wrong input'
+    }
+  };
+  // Verify new password
+  const hashedNewPassword = getHashOf(newPassword);
+  if (hashedOldPassword === hashedNewPassword) {
+    return {
+      error: 'INVALID_NEW_PASSWORD',
+      message: 'Invalid new password: new password matches old password'
+    }
+  };
+  if (!checkPasswordLen(newPassword.length)) {
+    return {
+      error: 'INVALID_NEW_PASSWORD',
+      message: 'Invalid new password: name is not within acceptable character range (>8)'
+    }
+  };
+  if (!checkPasswordCharacters(password)) {
+    return {
+      error: 'INVALID_NEW_PASSWORD',
+      message: 'Invalid new password: new Password does not contain at least one number and at least one letter'
+    }
+  };
+  if (user.usedPasswords.includes(hashedNewPassword)) {
+    return {
+      error: 'INVALID_NEW_PASSWORD',
+      message: 'Invalid new password: new password has been used before by this user'
+    }
+  };
+  // Update password
+  user.usedPasswords.push(hashedNewPassword);
+  user.password = hashedNewPassword;
+
+  // Saving data
+  saveData();
+
+  return { };
+};
+
+/**
+ * Logs out a user who has an active user session.
+ *
+ * @param {string} sessionId
+ *
+ * @returns { }
+ */
+function adminAuthLogout(sessionId: string) {
+  // Loading data
+  loadData();
+  const data = getData();
+
+  // Find the index of the session to be removed, and then remove it
+  const sessionIndex = data.sessions.findIndex(s => s && s.sessionId === sessionId);
+  data.sessions.splice(sessionIndex, 1);
+
+  // Saving data
+  saveData();
+
+  return { };
+}
 
 export {
   adminAuthRegister,
   adminAuthLogin,
   adminUserDetails,
-  adminUserDetailsUpdate
+  adminUserDetailsUpdate,
+  adminUserPasswordUpdate,
+  adminAuthLogout
 }
 
 
