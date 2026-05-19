@@ -238,7 +238,26 @@ function adminAuthLogin(email: string, password: string): { session: string } | 
   }
 }
 
-export { adminAuthRegister, adminAuthLogin }
+/**
+ * Given an admin user's session email, update the properties
+ * of this logged in admin user.
+ *
+ * @param {string} session
+ * @param {string} email
+ * @returns {empty}
+ */
+function adminUserDetailsUpdate(session: string, email: string): EmptyObject | ErrorObject {
+  // CHECK IF FIELDS EXIST FIRST, IF THEY DON'T HAVE ITS OWN ERROR
+  // The fields which need to exist are everything but the pfp, where if pfp doesn't exist
+  // we assign a random one 
+  loadData();
+  const data = getData();
+
+  // If the age isn't inputted, 
+}
+
+
+export { adminAuthRegister, adminAuthLogin, adminUserDetailsUpdate }
 
 
 

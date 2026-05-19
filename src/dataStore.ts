@@ -15,14 +15,14 @@ export interface User {
   usedPasswords: string[];
   numSuccessfulLogins: number;
   numFailedPasswordsSinceLastLogin: number;
-  age: number;
+  age?: number;
   profilePic?: File;
-  bio: string;
-  gym: string;
-  location: string;
-  goals: string;
-  gender: string;
-  gym_experience: number;
+  bio?: string;
+  gym?: string;
+  location?: string;
+  goals?: string;
+  gender?: string;
+  gym_experience?: number;
 }
 
 export interface Session {
