@@ -1,5 +1,6 @@
-// User registration etc 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//--- IMPORTS -----------------------------------------------------------------------------------//
+///////////////////////////////////////////////////////////////////////////////////////////////////
 import crypto from 'crypto'
 import validator from 'validator';
 import { 
@@ -13,7 +14,9 @@ import {
   saveData 
 } from './dataStore'
 
-// Constants
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//--- CONSTANTS ---------------------------------------------------------------------------------//
+///////////////////////////////////////////////////////////////////////////////////////////////////
 const MIN_NAME_LEN = 2;
 const MAX_NAME_LEN = 20;
 const MIN_PASSWORD_LEN = 8;
@@ -23,7 +26,9 @@ const DIGITS = /[0-9]/;
 const INDEX_NOT_FOUND = -1;
 const REMOVE_ONE_ITEM = 1;
 
-// Helper Functions
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//--- HELPERS -----------------------------------------------------------------------------------//
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * Checks to see if the user with the given email exists
  *
@@ -95,9 +100,11 @@ export function checkPasswordCharacters(password: string): boolean {
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//--- MAIN --------------------------------------------------------------------------------------//
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * Register a user with an email, password, and names, then return their session
- * value.
+ * Register a user with an email, password, and names, then return their session value.
  *
  * @param {string} email
  * @param {string} password
@@ -211,15 +218,13 @@ function adminAuthRegister(email: string, password: string, nameFirst: string, n
  * @returns {session: string}
  */
 function adminAuthLogin(email: string, password: string): { session: string } | ErrorObject {
-  // indirectly access data
   loadData()
   const data: DataStore = getData();
 
-  // check to see if the user with the corresponding email exists
+  // Check to see if the user with the corresponding email exists
   const emailCheck: User | undefined = checkEmail(data, email);
 
-  // checks if password is correct and returns session or
-  // error message accordingly
+  // Checks if password is correct and returns session or error message
   if (emailCheck) {
     if (emailCheck.password === getHashOf(password)) {
       const userId = 
@@ -257,51 +262,72 @@ function adminAuthLogin(email: string, password: string): { session: string } | 
 }
 
 /**
- * Given an admin user's session and userId, update the properties
- * of this logged in admin user.
- *
- * @param {string} session
- * @param {string} email
- * @returns {empty}
- */
-function adminUserDetailsUpdate(sessionId: string, userId: number): EmptyObject | ErrorObject {
-  // CHECK IF FIELDS EXIST FIRST, IF THEY DON'T HAVE ITS OWN ERROR
-  // The fields which need to exist are everything but the pfp, where if pfp doesn't exist
-  // we assign a random one 
+  * Given a user's userId, return details about the user.
+  *
+  * @param {int} userId - user's userId
+  *
+  * @returns {object} - user's userId is valid
+*/
+function adminUserDetails(userId: number) {
+  // Loading data
   loadData();
   const data = getData();
-  const session: Session | undefined = checkSession(data, sessionId)
-  
-  if (!session) {
-    return {
-      error: 'UNAUTHORISED',
-      message: 'Session is empty or invalid'
-    }
-  }
+  for (const user of data.users) {
+    if (userId === user.userId) {
+      // Saving data
+      saveData();
 
-  const user = data.users.find(user => user.userId === session.userId)
+      return {
+        user: {
+          userId: user.userId,
+          name: `${user.nameFirst} ${user.nameLast}`,
+          email: user.email,
+          numSuccessfulLogins: user.numSuccessfulLogins,
+          numFailedPasswordsSinceLastLogin: user.numFailedPasswordsSinceLastLogin,
+          age: user.age,
+          profilePic: user.profilePic,
+          bio: user.bio,
+          gym: user.gym,
+          location: user.location,
+          goals: user.goals,
+          gender: user.gender,
+          gym_experience: user.gym_experience
+        }
+      };
+    };
+  };
+};
 
-  // If userId is not the same as the one given by sessionId, return error
-  if (!user) {
-    return {
-      error: 'UNAUTHORISED',
-      message: 'Incorrect user of session'
-    }
-  }
+/**
+ * Given a user's userId and a set of properties, update the properties of this logged in user.
+ *
+ * @param {int} userId
+ * @param {string} email
+ * @param {string} nameFirst
+ * @param {string} nameLast
+ * @param {int} age
+ * @param {File} profilePic
+ * @param {string} bio
+ * @param {string} gym
+ * @param {string} location
+ * @param {string} goals
+ * @param {string} gender
+ * @param {int} gym_experience
+ * @returns {empty}
+ */
+function adminUserDetailsUpdate(userId: number, email: string, nameFirst: string, nameLast: string, age: number, profilePic: File,
+  bio: string, gym: string, location: string, goals: string, gender: string, gym_experience: number): EmptyObject | ErrorObject {
+  // All fields except profilePic, bio, location, goals must have a value
+  loadData();
+  const data = getData();
+  const user = data.users.find(user => user.userId === userId)
 
+  // Checking whether fields are empty
   // If there is no age found, return error 
   if (user.age === INDEX_NOT_FOUND) {
     return {
       error: 'AGE_NOT_FOUND',
       message: 'Age not present, please input age!'
-    }
-  }
-
-  // If there is no bio found, return error
-  if (user.bio === '') {
-    return {
-      error: 'BIO_NOT_FOUND',
-      message: 'Bio not present, please input bio!'
     }
   }
 
@@ -313,32 +339,98 @@ function adminUserDetailsUpdate(sessionId: string, userId: number): EmptyObject 
     }
   }
 
-  // If there is no location, return error
-  if (user.location === '') {
-    return {
-      error: 'LOCATION_NOT_FOUND',
-      message: 'Location not present, please input location!'
-    }
-  }
-
-  // If there are no goals, return error
-  if (user.goals === '') {
-    return {
-      error: 'GOALS_NOT_FOUND',
-      message: 'Goals not present, please input some goals!'
-    }
-  }
-
   if (user.gender === '') {
     return {
       error: 'GENDER_NOT_FOUND',
-      gender: 'Gender not present, '
+      message: 'Gender not present, '
     }
   }
+
+  // Error checks
+  // If email is invalid
+  if (email === '' || email === undefined) {
+    return {
+      error: 'INVALID_EMAIL',
+      message: 'Invalid email: address cannot be an empty string'
+    }
+  };
+  if (validator.isEmail(email) === false) {
+    return {
+      error: 'INVALID_EMAIL',
+      message: 'Invalid email: address provided is not a valid email address'
+    }
+  };
+
+  // If can find email and it's not the same user, it is invalid
+  if (data.users.find(u => u.email === email && u.userId !== userId)) {
+    return {
+      error: 'INVALID_EMAIL',
+      message: 'Invalid email: email is currently used by another user'
+    }
+  };
+
+  // Check valid nameFirst characters
+  if (!VALID_NAME.test(nameFirst)) {
+    return {
+      error: 'INVALID_FIRST_NAME',
+      message: 'Invalid first name: name contains invalid characters'
+    }
+  };
+  // Check valid nameFirst length
+  if (!checkNameLength(nameFirst.length)) {
+    return {
+      error: 'INVALID_FIRST_NAME',
+      message: 'Invalid first name: name is not within acceptable character range (2-20)'
+    }
+  };
+
+  // Check valid nameLast characters
+  if (!VALID_NAME.test(nameLast)) {
+    return {
+      error: 'INVALID_LAST_NAME',
+      message: 'Invalid last name: name contains invalid characters'
+    }
+  };
+
+  // Check valid nameLast length
+  if (!checkNameLength(nameLast.length)) {
+    return {
+      error: 'INVALID_LAST_NAME',
+      message:'Invalid last name: name is not within acceptable character range (2-20)'
+    }
+  };
+
+  // NEED MORE ERROR CHECKS FOR AGE...GYM_EXPERIENCE
+
+  for (const user of data.users) {
+    if (userId === user.userId) {
+      user.email = email;
+      user.nameFirst = nameFirst;
+      user.nameLast = nameLast;
+      user.age = age;
+      user.profilePic = profilePic;
+      user.bio = bio;
+      user.gym = gym;
+      user.location = location;
+      user.goals = goals;
+      user.gender = gender;
+      user.gym_experience = gym_experience
+    }
+  }
+
+  // Saving data
+  saveData();
+
+  return { };
 }
 
 
-export { adminAuthRegister, adminAuthLogin, adminUserDetailsUpdate }
+export {
+  adminAuthRegister,
+  adminAuthLogin,
+  adminUserDetails,
+  adminUserDetailsUpdate
+}
 
 
 
