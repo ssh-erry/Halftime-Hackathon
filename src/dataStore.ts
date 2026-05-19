@@ -30,6 +30,14 @@ export interface Session {
   userId: number;
 }
 
+export interface Message {
+  messageId: number;
+  senderId: number;
+  receiverId: number;
+  message: string;
+  timeSent: number;
+}
+
 export interface ErrorObject {
   error: string;
   message: string;
@@ -40,11 +48,13 @@ export type EmptyObject = Record<never, never>;
 export interface DataStore {
   users: User[];
   sessions: Session[];
+  messages: Message[];
 }
 
 const data: DataStore = {
   users: [],
-  sessions: []
+  sessions: [],
+  messages: [],
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
