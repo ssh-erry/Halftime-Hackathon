@@ -90,10 +90,16 @@ function saveData() {
  * @returns {null}
  */
 function loadData() {
+  if (!fs.existsSync('data.json')) {
+    saveData();
+    return;
+  }
+
   const loadedData = JSON.parse(fs.readFileSync('data.json', 'utf-8'));
 
   data.users = loadedData.users;
   data.sessions = loadedData.sessions;
+  data.messages = loadedData.messages;
 }
 
 export {
